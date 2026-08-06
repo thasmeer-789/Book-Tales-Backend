@@ -1,5 +1,7 @@
 using BookTales.Application;
 using BookTales.Infrastructure;
+using BookTales.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,11 +16,18 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+
 // Configure middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+    await RoleSeeder.SeedRolesAsync(roleManager);
 }
 
 app.UseHttpsRedirection();
