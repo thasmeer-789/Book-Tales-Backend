@@ -10,9 +10,13 @@ namespace BookTales.Infrastructure.Persistence.Configurations
         {
             builder.HasKey(u => u.Id);
 
-            builder.Property(u => u.FullName)
+            builder.Property(u => u.FirstName)
                    .IsRequired()
-                   .HasMaxLength(100);
+                   .HasMaxLength(50);
+
+            builder.Property(u => u.LastName)
+                   .IsRequired()
+                   .HasMaxLength(50);
 
             builder.Property(u => u.Email)
                    .IsRequired()

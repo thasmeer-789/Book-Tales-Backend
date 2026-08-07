@@ -24,11 +24,6 @@
     <ProjectReference Include="..\BookTales.Application\BookTales.Application.csproj" />
     <ProjectReference Include="..\BookTales.Domain\BookTales.Domain.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Service\" />
-    <Folder Include="Repositories\" />
-  </ItemGroup>
 	
 	<ItemGroup>
   <FrameworkReference Include="Microsoft.AspNetCore.App" />

@@ -1,18 +1,12 @@
-﻿using BookTales.Infrastructure.Identity;
+﻿using BookTales.Domain.Entities;
 
 namespace BookTales.Application.Interfaces.Repositories;
 
 public interface IUserRepository
 {
-    Task<ApplicationUser?> GetByEmailAsync(string email);
+    Task<User?> GetByEmailAsync(string email);
 
-    Task<ApplicationUser?> GetByIdAsync(string id);
+    Task AddAsync(User user);
 
-    Task<bool> CheckPasswordAsync(ApplicationUser user, string password);
-
-    Task CreateAsync(ApplicationUser user, string password);
-
-    Task AddToRoleAsync(ApplicationUser user, string role);
-
-    Task<IList<string>> GetRolesAsync(ApplicationUser user);
+    Task SaveChangesAsync();
 }
