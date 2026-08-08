@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IBookRepository, BookRepository>();
+        services.AddScoped<IWishlistRepository, WishlistRepository>();
         services.AddScoped<IJwtService, JwtService>();
 
         return services;

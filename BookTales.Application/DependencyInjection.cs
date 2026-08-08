@@ -11,6 +11,7 @@ namespace BookTales.Application
             services.AddAutoMapper(cfg => { }, typeof(CategoryService).Assembly);
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IBookService, BookService>();
+            services.AddScoped<IWishlistService, WishlistService>();
 
             return services;
         }
