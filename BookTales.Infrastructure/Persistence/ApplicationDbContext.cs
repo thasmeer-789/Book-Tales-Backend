@@ -2,7 +2,6 @@
 using BookTales.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
 namespace BookTales.Infrastructure.Persistence
 {
     public class ApplicationDbContext

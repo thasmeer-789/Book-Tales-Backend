@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BookTales.Application.Interfaces.Services;
+using BookTales.Application.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BookTales.Application
 {
@@ -6,6 +8,9 @@ namespace BookTales.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
+            services.AddAutoMapper(cfg => { }, typeof(CategoryService).Assembly);
+            services.AddScoped<ICategoryService, CategoryService>();
+
             return services;
         }
     }
