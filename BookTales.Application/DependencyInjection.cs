@@ -12,6 +12,7 @@ namespace BookTales.Application
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IBookService, BookService>();
             services.AddScoped<IWishlistService, WishlistService>();
+            services.AddScoped<ICartService, CartService>();
 
             return services;
         }
