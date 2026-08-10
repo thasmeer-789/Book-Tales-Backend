@@ -1,4 +1,5 @@
-﻿using BookTales.Application.Interfaces.Services;
+﻿using BookTales.Application.Interfaces.Repositories;
+using BookTales.Application.Interfaces.Services;
 using BookTales.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +14,7 @@ namespace BookTales.Application
             services.AddScoped<IBookService, BookService>();
             services.AddScoped<IWishlistService, WishlistService>();
             services.AddScoped<ICartService, CartService>();
+            services.AddScoped<IOrderService, OrderService>();
 
             return services;
         }
