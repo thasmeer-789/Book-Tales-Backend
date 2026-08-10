@@ -17,6 +17,9 @@ namespace BookTales.Infrastructure.Persistence.Configurations
                    .WithMany(b => b.CartItems)
                    .HasForeignKey(ci => ci.BookId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(ci => new { ci.CartId, ci.BookId })
+                   .IsUnique();
         }
     }
 }

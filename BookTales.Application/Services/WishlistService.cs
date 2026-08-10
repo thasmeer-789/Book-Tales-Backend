@@ -9,13 +9,16 @@ namespace BookTales.Application.Services;
 public class WishlistService : IWishlistService
 {
     private readonly IWishlistRepository _wishlistRepository;
+    private readonly IBookRepository _bookRepository;
     private readonly IMapper _mapper;
 
     public WishlistService(
         IWishlistRepository wishlistRepository,
+            IBookRepository bookRepository,
         IMapper mapper)
     {
         _wishlistRepository = wishlistRepository;
+        _bookRepository = bookRepository;
         _mapper = mapper;
     }
 
@@ -41,6 +44,12 @@ public class WishlistService : IWishlistService
         Guid userId,
         AddWishlistItemDto request)
     {
+
+        var book = await _bookRepository.GetByIdAsync(request.BookId);
+        if (book == null)
+        {
+            throw new InvalidOperationException("Book not found.");
+        }
         var wishlist = await _wishlistRepository.GetByUserIdAsync(userId);
 
         if (wishlist == null)

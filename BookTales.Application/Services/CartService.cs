@@ -9,13 +9,16 @@ namespace BookTales.Application.Services;
 public class CartService : ICartService
 {
     private readonly ICartRepository _cartRepository;
+    private readonly IBookRepository _bookRepository;
     private readonly IMapper _mapper;
 
     public CartService(
         ICartRepository cartRepository,
+        IBookRepository bookRepository,
         IMapper mapper)
     {
         _cartRepository = cartRepository;
+        _bookRepository = bookRepository;
         _mapper = mapper;
     }
 
@@ -46,6 +49,11 @@ public class CartService : ICartService
         AddCartItemDto request)
     {
         if (request.Quantity <= 0)
+            return false;
+
+        var book = await _bookRepository.GetByIdAsync(request.BookId);
+
+        if (book == null)
             return false;
 
         var cart = await _cartRepository.GetByUserIdAsync(userId);

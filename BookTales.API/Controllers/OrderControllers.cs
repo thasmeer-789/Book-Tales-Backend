@@ -22,11 +22,12 @@ namespace BookTales.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOrder(CreateOrderDto dto)
         {
-            var userId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!
-            );
+            var userId = GetUserId();
 
-            dto.UserId = userId;
+            if (userId == null)
+                return Unauthorized();
+
+            dto.UserId = userId.Value;
 
             var order = await _orderService.CreateOrderAsync(dto);
 
@@ -37,15 +38,15 @@ namespace BookTales.API.Controllers
                 data = order
             });
         }
-
         [HttpGet]
         public async Task<IActionResult> GetMyOrders()
         {
-            var userId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!
-            );
+            var userId = GetUserId();
 
-            var orders = await _orderService.GetMyOrdersAsync(userId);
+            if (userId == null)
+                return Unauthorized();
+
+            var orders = await _orderService.GetMyOrdersAsync(userId.Value);
 
             return Ok(new
             {
@@ -57,11 +58,14 @@ namespace BookTales.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrderById(Guid id)
         {
-            var userId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!
-            );
+            var userId = GetUserId();
 
-            var order = await _orderService.GetOrderByIdAsync(id, userId);
+            if (userId == null)
+                return Unauthorized();
+
+            var order = await _orderService.GetOrderByIdAsync(
+                id,
+                userId.Value);
 
             if (order == null)
             {
@@ -157,6 +161,17 @@ namespace BookTales.API.Controllers
                     message = ex.Message
                 });
             }
+        }
+
+        private Guid? GetUserId()
+        {
+            var userIdClaim = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (!Guid.TryParse(userIdClaim, out var userId))
+                return null;
+
+            return userId;
         }
     }
 

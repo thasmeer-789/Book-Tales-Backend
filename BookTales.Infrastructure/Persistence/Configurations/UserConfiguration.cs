@@ -22,6 +22,9 @@ namespace BookTales.Infrastructure.Persistence.Configurations
                    .IsRequired()
                    .HasMaxLength(100);
 
+            builder.HasIndex(u => u.Email)
+                   .IsUnique();
+
             builder.Property(u => u.PhoneNumber)
                    .HasMaxLength(15);
 

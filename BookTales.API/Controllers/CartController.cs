@@ -50,7 +50,7 @@ public class CartController : ControllerBase
             return BadRequest(new
             {
                 success = false,
-                message = "Quantity must be greater than zero."
+                message = "Invalid cart item. Check the book ID and quantity."
             });
         }
 

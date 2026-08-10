@@ -37,26 +37,48 @@ public class CategoryController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateCategoryDto request)
     {
-        var response = await _categoryService.CreateAsync(request);
+        try
+        {
+            var response = await _categoryService.CreateAsync(request);
 
-        return Ok(response);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
-        Guid id,
-        UpdateCategoryDto request)
+    Guid id,
+    UpdateCategoryDto request)
     {
-        var result = await _categoryService.UpdateAsync(id, request);
-
-        if (!result)
-            return NotFound();
-
-        return Ok(new
+        try
         {
-            success = true,
-            message = "Category updated successfully."
-        });
+            var result = await _categoryService.UpdateAsync(id, request);
+
+            if (!result)
+                return NotFound();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Category updated successfully."
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
     [HttpDelete("{id}")]

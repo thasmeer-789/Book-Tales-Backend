@@ -34,31 +34,42 @@ public class WishlistController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> AddToWishlist(
-        AddWishlistItemDto request)
+    AddWishlistItemDto request)
     {
         var userId = GetUserId();
 
         if (userId == null)
             return Unauthorized();
 
-        var result = await _wishlistService.AddToWishlistAsync(
-            userId.Value,
-            request);
-
-        if (!result)
+        try
         {
-            return Conflict(new
+            var result = await _wishlistService.AddToWishlistAsync(
+                userId.Value,
+                request);
+
+            if (!result)
             {
-                success = false,
-                message = "Book is already in the wishlist."
+                return Conflict(new
+                {
+                    success = false,
+                    message = "Book is already in the wishlist."
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                message = "Book added to wishlist successfully."
             });
         }
-
-        return Ok(new
+        catch (InvalidOperationException ex)
         {
-            success = true,
-            message = "Book added to wishlist successfully."
-        });
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
     [HttpDelete("{bookId}")]

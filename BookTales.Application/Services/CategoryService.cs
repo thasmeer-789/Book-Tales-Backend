@@ -41,6 +41,10 @@ public class CategoryService : ICategoryService
     {
         var category = _mapper.Map<Category>(request);
 
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new InvalidOperationException(
+                "Category name is required.");
+
         await _categoryRepository.AddAsync(category);
         await _categoryRepository.SaveChangesAsync();
 
@@ -51,6 +55,10 @@ public class CategoryService : ICategoryService
         Guid id,
         UpdateCategoryDto request)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new InvalidOperationException(
+                "Category name is required.");
+
         var category = await _categoryRepository.GetByIdAsync(id);
 
         if (category == null)

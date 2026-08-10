@@ -17,6 +17,9 @@ namespace BookTales.Infrastructure.Persistence.Configurations
             builder.Property(c => c.Description)
                    .HasMaxLength(500);
 
+            builder.HasIndex(c => c.Name)
+                    .IsUnique();
+
             builder.HasMany(c => c.Books)
                    .WithOne(b => b.Category)
                    .HasForeignKey(b => b.CategoryId);

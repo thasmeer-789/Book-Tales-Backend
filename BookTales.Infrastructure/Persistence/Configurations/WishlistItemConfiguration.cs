@@ -14,6 +14,9 @@ namespace BookTales.Infrastructure.Persistence.Configurations
                    .WithMany(b => b.WishlistItems)
                    .HasForeignKey(wi => wi.BookId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(wi => new { wi.WishlistId, wi.BookId })
+                    .IsUnique();
         }
     }
 }
