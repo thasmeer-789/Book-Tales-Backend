@@ -4,6 +4,7 @@ using BookTales.Infrastructure.Identity;
 using BookTales.Infrastructure.Persistence;
 using BookTales.Infrastructure.Repositories;
 using BookTales.Infrastructure.Services;
+using BookTales.Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -27,7 +28,12 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
+        services.Configure<EmailSettings>(
+    configuration.GetSection("EmailSettings"));
+
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IOtpVerificationRepository, OtpVerificationRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IBookRepository, BookRepository>();

@@ -75,27 +75,49 @@ public class BookController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateBookDto request)
     {
-        var response = await _bookService.CreateAsync(request);
+        try
+        {
+            var response = await _bookService.CreateAsync(request);
 
-        return Ok(response);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
-        Guid id,
-        UpdateBookDto request)
+    Guid id,
+    UpdateBookDto request)
     {
-        var result = await _bookService.UpdateAsync(id, request);
-
-        if (!result)
-            return NotFound();
-
-        return Ok(new
+        try
         {
-            success = true,
-            message = "Book updated successfully."
-        });
+            var result = await _bookService.UpdateAsync(id, request);
+
+            if (!result)
+                return NotFound();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Book updated successfully."
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
     }
 
     [HttpDelete("{id}")]

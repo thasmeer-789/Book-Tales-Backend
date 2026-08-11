@@ -29,15 +29,35 @@ namespace BookTales.API.Controllers
 
             dto.UserId = userId.Value;
 
-            var order = await _orderService.CreateOrderAsync(dto);
-
-            return Ok(new
+            try
             {
-                success = true,
-                message = "Order created successfully.",
-                data = order
-            });
+                var order = await _orderService.CreateOrderAsync(dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Order created successfully.",
+                    data = order
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
+
         [HttpGet]
         public async Task<IActionResult> GetMyOrders()
         {

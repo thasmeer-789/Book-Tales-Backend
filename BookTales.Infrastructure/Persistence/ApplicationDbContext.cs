@@ -15,6 +15,8 @@ namespace BookTales.Infrastructure.Persistence
         // Domain Entities
         public DbSet<User> DomainUsers { get; set; }
 
+        public DbSet<OtpVerification> OtpVerifications { get; set; }
+
         public DbSet<Category> Categories { get; set; }
 
         public DbSet<Book> Books { get; set; }

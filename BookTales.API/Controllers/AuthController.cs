@@ -16,40 +16,66 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequestDto request)
+    public async Task<IActionResult> Register(
+        RegisterRequestDto request)
     {
-        try
-        {
-            var response = await _authService.RegisterAsync(request);
+        var response = await _authService.RegisterAsync(request);
 
-            return Ok(response);
-        }
-        catch (Exception ex)
+        return Ok(response);
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(
+        LoginRequestDto request)
+    {
+        var response = await _authService.LoginAsync(request);
+
+        return Ok(response);
+    }
+
+    [HttpPost("verify-registration-otp")]
+    public async Task<IActionResult> VerifyRegistrationOtp(
+        VerifyOtpRequestDto request)
+    {
+        var result =
+            await _authService.VerifyRegistrationOtpAsync(request);
+
+        if (!result)
         {
             return BadRequest(new
             {
                 success = false,
-                message = ex.Message
+                message = "Invalid or expired OTP."
             });
         }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Email verified successfully."
+        });
     }
 
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequestDto request)
+    [HttpPost("resend-registration-otp")]
+    public async Task<IActionResult> ResendRegistrationOtp(
+        [FromQuery] string email)
     {
-        try
-        {
-            var response = await _authService.LoginAsync(request);
+        var result =
+            await _authService.ResendRegistrationOtpAsync(email);
 
-            return Ok(response);
-        }
-        catch (Exception ex)
+        if (!result)
         {
-            return Unauthorized(new
+            return BadRequest(new
             {
                 success = false,
-                message = ex.Message
+                message = "Unable to resend OTP."
             });
         }
+
+        return Ok(new
+        {
+            success = true,
+            message = "A new OTP has been sent."
+        });
     }
 }
