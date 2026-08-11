@@ -26,7 +26,7 @@ public class AuthService : IAuthService
         IJwtService jwtService,
         IEmailService emailService,
         IOtpVerificationRepository otpRepository,
-         ApplicationDbContext context)
+        ApplicationDbContext context)
     {
         _userManager = userManager;
         _userRepository = userRepository;
@@ -34,11 +34,10 @@ public class AuthService : IAuthService
         _emailService = emailService;
         _otpRepository = otpRepository;
         _context = context;
-
     }
 
     public async Task<AuthResponseDto> RegisterAsync(
-     RegisterRequestDto request)
+        RegisterRequestDto request)
     {
         if (request.Password != request.ConfirmPassword)
             throw new Exception("Passwords do not match.");
@@ -107,14 +106,19 @@ public class AuthService : IAuthService
                         roleResult.Errors.Select(e => e.Description)));
             }
 
-            // 4. Generate OTP
+            // 4. Invalidate previous registration OTPs
+            await _otpRepository.InvalidatePreviousOtpsAsync(
+                domainUser.Id,
+                OtpPurpose.RegisterVerification);
+
+            // 5. Generate OTP
             var otp = GenerateOtp();
 
             var otpHash = Convert.ToBase64String(
                 SHA256.HashData(
                     Encoding.UTF8.GetBytes(otp)));
 
-            // 5. Store OTP
+            // 6. Store OTP
             var otpVerification = new OtpVerification
             {
                 UserId = domainUser.Id,
@@ -127,14 +131,14 @@ public class AuthService : IAuthService
             await _otpRepository.AddAsync(otpVerification);
             await _otpRepository.SaveChangesAsync();
 
-            // 6. Send OTP Email
+            // 7. Send OTP Email
             await _emailService.SendEmailAsync(
                 applicationUser.Email!,
                 "Book-Tales Registration OTP",
                 $"Your Book-Tales verification OTP is: {otp}. " +
                 "It expires in 5 minutes.");
 
-            // 7. Commit everything
+            // 8. Commit transaction
             await transaction.CommitAsync();
 
             return new AuthResponseDto
@@ -150,9 +154,7 @@ public class AuthService : IAuthService
         }
         catch
         {
-            // Something failed → undo database changes
             await transaction.RollbackAsync();
-
             throw;
         }
     }
@@ -245,6 +247,12 @@ public class AuthService : IAuthService
         if (user.EmailConfirmed)
             return false;
 
+        // Invalidate previous registration OTPs
+        await _otpRepository.InvalidatePreviousOtpsAsync(
+            user.DomainUserId,
+            OtpPurpose.RegisterVerification);
+
+        // Generate new OTP
         var otp = GenerateOtp();
 
         var otpHash = Convert.ToBase64String(
@@ -270,6 +278,125 @@ public class AuthService : IAuthService
             "Book-Tales Registration OTP",
             $"Your Book-Tales verification OTP is: {otp}. " +
             "It expires in 5 minutes.");
+
+        return true;
+    }
+
+    public async Task<bool> ForgotPasswordAsync(
+        ForgotPasswordRequestDto request)
+    {
+        var user =
+            await _userManager.FindByEmailAsync(
+                request.Email);
+
+        if (user == null)
+            return false;
+
+        // Invalidate previous password reset OTPs
+        await _otpRepository.InvalidatePreviousOtpsAsync(
+            user.DomainUserId,
+            OtpPurpose.PasswordReset);
+
+        // Generate new OTP
+        var otp = GenerateOtp();
+
+        var otpHash = Convert.ToBase64String(
+            SHA256.HashData(
+                Encoding.UTF8.GetBytes(otp)));
+
+        var otpVerification = new OtpVerification
+        {
+            UserId = user.DomainUserId,
+            CodeHash = otpHash,
+            Purpose = OtpPurpose.PasswordReset,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(5),
+            IsUsed = false
+        };
+
+        await _otpRepository.AddAsync(
+            otpVerification);
+
+        await _otpRepository.SaveChangesAsync();
+
+        await _emailService.SendEmailAsync(
+            user.Email!,
+            "Book-Tales Password Reset OTP",
+            $"Your Book-Tales password reset OTP is: {otp}. " +
+            "It expires in 5 minutes.");
+
+        return true;
+    }
+
+    public async Task<bool> VerifyPasswordResetOtpAsync(
+        VerifyOtpRequestDto request)
+    {
+        var user =
+            await _userManager.FindByEmailAsync(
+                request.Email);
+
+        if (user == null)
+            return false;
+
+        var otpHash = Convert.ToBase64String(
+            SHA256.HashData(
+                Encoding.UTF8.GetBytes(request.Otp)));
+
+        var otp =
+            await _otpRepository.GetValidOtpAsync(
+                user.DomainUserId,
+                OtpPurpose.PasswordReset,
+                otpHash);
+
+        if (otp == null)
+            return false;
+
+        return true;
+    }
+
+    public async Task<bool> ResetPasswordAsync(
+        ResetPasswordRequestDto request)
+    {
+        if (request.NewPassword != request.ConfirmPassword)
+            return false;
+
+        var user =
+            await _userManager.FindByEmailAsync(
+                request.Email);
+
+        if (user == null)
+            return false;
+
+        var otpHash = Convert.ToBase64String(
+            SHA256.HashData(
+                Encoding.UTF8.GetBytes(request.Otp)));
+
+        var otp =
+            await _otpRepository.GetValidOtpAsync(
+                user.DomainUserId,
+                OtpPurpose.PasswordReset,
+                otpHash);
+
+        if (otp == null)
+            return false;
+
+        var token =
+            await _userManager.GeneratePasswordResetTokenAsync(
+                user);
+
+        var result =
+            await _userManager.ResetPasswordAsync(
+                user,
+                token,
+                request.NewPassword);
+
+        if (!result.Succeeded)
+            return false;
+
+        otp.IsUsed = true;
+
+        _otpRepository.Update(otp);
+
+        await _otpRepository.SaveChangesAsync();
 
         return true;
     }

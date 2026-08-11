@@ -45,6 +45,24 @@ public class OtpVerificationRepository : IOtpVerificationRepository
             .FirstOrDefaultAsync();
     }
 
+    public async Task InvalidatePreviousOtpsAsync(
+        Guid userId,
+        string purpose)
+    {
+        var previousOtps =
+            await _context.OtpVerifications
+                .Where(o =>
+                    o.UserId == userId &&
+                    o.Purpose == purpose &&
+                    !o.IsUsed)
+                .ToListAsync();
+
+        foreach (var otp in previousOtps)
+        {
+            otp.IsUsed = true;
+        }
+    }
+
     public void Update(OtpVerification otp)
     {
         _context.OtpVerifications.Update(otp);

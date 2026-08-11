@@ -78,4 +78,73 @@ public class AuthController : ControllerBase
             message = "A new OTP has been sent."
         });
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(
+    ForgotPasswordRequestDto request)
+    {
+        var result = await _authService.ForgotPasswordAsync(request);
+
+        if (!result)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Unable to process password reset request."
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Password reset OTP has been sent to your email."
+        });
+    }
+
+    [HttpPost("verify-password-reset-otp")]
+    public async Task<IActionResult> VerifyPasswordResetOtp(
+    VerifyOtpRequestDto request)
+    {
+        var result =
+            await _authService.VerifyPasswordResetOtpAsync(request);
+
+        if (!result)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Invalid or expired OTP."
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Password reset OTP is valid."
+        });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(
+    ResetPasswordRequestDto request)
+    {
+        var result =
+            await _authService.ResetPasswordAsync(request);
+
+        if (!result)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Unable to reset password."
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Password reset successfully."
+        });
+    }
+
 }

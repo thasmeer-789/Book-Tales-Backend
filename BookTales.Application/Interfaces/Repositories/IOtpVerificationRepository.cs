@@ -18,4 +18,8 @@ public interface IOtpVerificationRepository
     void Update(OtpVerification otp);
 
     Task SaveChangesAsync();
+
+    Task InvalidatePreviousOtpsAsync(
+    Guid userId,
+    string purpose);
 }
