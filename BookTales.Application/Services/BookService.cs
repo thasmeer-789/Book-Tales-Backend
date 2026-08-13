@@ -14,7 +14,7 @@ public class BookService : IBookService
 
     public BookService(
         IBookRepository bookRepository,
-            ICategoryRepository categoryRepository,
+        ICategoryRepository categoryRepository,
         IMapper mapper)
     {
         _bookRepository = bookRepository;
@@ -46,7 +46,8 @@ public class BookService : IBookService
         return _mapper.Map<IEnumerable<BookResponseDto>>(books);
     }
 
-    public async Task<IEnumerable<BookResponseDto>> GetByCategoryAsync(Guid categoryId)
+    public async Task<IEnumerable<BookResponseDto>> GetByCategoryAsync(
+        Guid categoryId)
     {
         var books = await _bookRepository.GetByCategoryAsync(categoryId);
 
@@ -54,8 +55,8 @@ public class BookService : IBookService
     }
 
     public async Task<(IEnumerable<BookResponseDto> Books, int TotalCount)> GetPagedAsync(
-    int pageNumber,
-    int pageSize)
+        int pageNumber,
+        int pageSize)
     {
         var result = await _bookRepository.GetPagedAsync(
             pageNumber,
@@ -66,27 +67,35 @@ public class BookService : IBookService
         return (books, result.TotalCount);
     }
 
-    public async Task<BookResponseDto> CreateAsync(CreateBookDto request)
+    public async Task<BookResponseDto> CreateAsync(
+        CreateBookDto request)
     {
         if (string.IsNullOrWhiteSpace(request.Title))
-            throw new InvalidOperationException("Book title is required.");
+            throw new InvalidOperationException(
+                "Book title is required.");
 
         if (string.IsNullOrWhiteSpace(request.Author))
-            throw new InvalidOperationException("Book author is required.");
+            throw new InvalidOperationException(
+                "Book author is required.");
 
         if (request.Price <= 0)
-            throw new InvalidOperationException("Book price must be greater than zero.");
+            throw new InvalidOperationException(
+                "Book price must be greater than zero.");
 
         if (request.Stock < 0)
-            throw new InvalidOperationException("Book stock cannot be negative.");
+            throw new InvalidOperationException(
+                "Book stock cannot be negative.");
 
         if (string.IsNullOrWhiteSpace(request.ISBN))
-            throw new InvalidOperationException("ISBN is required.");
+            throw new InvalidOperationException(
+                "ISBN is required.");
 
-        var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
+        var category = await _categoryRepository.GetByIdAsync(
+            request.CategoryId);
 
         if (category == null)
-            throw new InvalidOperationException("Category not found.");
+            throw new InvalidOperationException(
+                "Category not found.");
 
         var book = _mapper.Map<Book>(request);
 
@@ -95,36 +104,49 @@ public class BookService : IBookService
 
         return _mapper.Map<BookResponseDto>(book);
     }
-    public async Task<bool> UpdateAsync(Guid id, UpdateBookDto request)
+
+    public async Task<bool> UpdateAsync(
+    Guid id,
+    UpdateBookDto request)
     {
         if (string.IsNullOrWhiteSpace(request.Title))
-            throw new InvalidOperationException("Book title is required.");
+            throw new InvalidOperationException(
+                "Book title is required.");
 
         if (string.IsNullOrWhiteSpace(request.Author))
-            throw new InvalidOperationException("Book author is required.");
+            throw new InvalidOperationException(
+                "Book author is required.");
 
         if (request.Price <= 0)
-            throw new InvalidOperationException("Book price must be greater than zero.");
+            throw new InvalidOperationException(
+                "Book price must be greater than zero.");
 
         if (request.Stock < 0)
-            throw new InvalidOperationException("Book stock cannot be negative.");
+            throw new InvalidOperationException(
+                "Book stock cannot be negative.");
 
         if (string.IsNullOrWhiteSpace(request.ISBN))
-            throw new InvalidOperationException("ISBN is required.");
+            throw new InvalidOperationException(
+                "ISBN is required.");
 
-        var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
+        var category = await _categoryRepository.GetByIdAsync(
+            request.CategoryId);
 
         if (category == null)
-            throw new InvalidOperationException("Category not found.");
+            throw new InvalidOperationException(
+                "Category not found.");
 
-        var book = await _bookRepository.GetByIdAsync(id);
+        var book = await _bookRepository.GetByIdForUpdateAsync(id);
 
         if (book == null)
             return false;
 
         _mapper.Map(request, book);
 
+        book.CategoryId = request.CategoryId;
+
         _bookRepository.Update(book);
+
         await _bookRepository.SaveChangesAsync();
 
         return true;
@@ -138,6 +160,7 @@ public class BookService : IBookService
             return false;
 
         _bookRepository.Delete(book);
+
         await _bookRepository.SaveChangesAsync();
 
         return true;

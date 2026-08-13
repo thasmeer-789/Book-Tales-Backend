@@ -15,6 +15,10 @@ public interface IBookRepository
     int pageNumber,
     int pageSize);
 
+    Task<List<Book>> GetByIdsAsync(IEnumerable<Guid> ids);
+
+    Task<Book?> GetByIdForUpdateAsync(Guid id);
+
     Task AddAsync(Book book);
 
     void Update(Book book);

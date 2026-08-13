@@ -18,7 +18,7 @@ public class WishlistRepository : IWishlistRepository
     {
         return await _context.Wishlists
             .Include(w => w.WishlistItems)
-                .ThenInclude(wi => wi.Book)
+            .ThenInclude(wi => wi.Book)
             .FirstOrDefaultAsync(w => w.UserId == userId);
     }
 

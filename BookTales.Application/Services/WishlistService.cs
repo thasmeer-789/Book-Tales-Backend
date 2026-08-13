@@ -14,7 +14,7 @@ public class WishlistService : IWishlistService
 
     public WishlistService(
         IWishlistRepository wishlistRepository,
-            IBookRepository bookRepository,
+        IBookRepository bookRepository,
         IMapper mapper)
     {
         _wishlistRepository = wishlistRepository;
@@ -44,12 +44,13 @@ public class WishlistService : IWishlistService
         Guid userId,
         AddWishlistItemDto request)
     {
-
         var book = await _bookRepository.GetByIdAsync(request.BookId);
+
         if (book == null)
         {
             throw new InvalidOperationException("Book not found.");
         }
+
         var wishlist = await _wishlistRepository.GetByUserIdAsync(userId);
 
         if (wishlist == null)
@@ -63,12 +64,13 @@ public class WishlistService : IWishlistService
             await _wishlistRepository.SaveChangesAsync();
         }
 
-        var existingItem = await _wishlistRepository.GetItemAsync(
-            wishlist.Id,
-            request.BookId);
+        var existingItem = wishlist.WishlistItems
+            .FirstOrDefault(item => item.BookId == request.BookId);
 
         if (existingItem != null)
+        {
             return false;
+        }
 
         var item = new WishlistItem
         {
@@ -89,14 +91,17 @@ public class WishlistService : IWishlistService
         var wishlist = await _wishlistRepository.GetByUserIdAsync(userId);
 
         if (wishlist == null)
+        {
             return false;
+        }
 
-        var item = await _wishlistRepository.GetItemAsync(
-            wishlist.Id,
-            bookId);
+        var item = wishlist.WishlistItems
+            .FirstOrDefault(item => item.BookId == bookId);
 
         if (item == null)
+        {
             return false;
+        }
 
         _wishlistRepository.RemoveItem(item);
         await _wishlistRepository.SaveChangesAsync();

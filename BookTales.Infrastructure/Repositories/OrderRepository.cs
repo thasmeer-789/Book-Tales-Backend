@@ -25,6 +25,7 @@ namespace BookTales.Infrastructure.Repositories
         public async Task<IEnumerable<Order>> GetByUserIdAsync(Guid userId)
         {
             return await _context.Orders
+                .AsNoTracking()
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Book)
                 .Where(o => o.UserId == userId)
@@ -35,6 +36,7 @@ namespace BookTales.Infrastructure.Repositories
         public async Task<Order?> GetByIdAsync(Guid orderId)
         {
             return await _context.Orders
+                .AsNoTracking()
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Book)
                 .FirstOrDefaultAsync(o => o.Id == orderId);

@@ -11,9 +11,10 @@ public interface IBookService
     Task<IEnumerable<BookResponseDto>> SearchAsync(string search);
 
     Task<IEnumerable<BookResponseDto>> GetByCategoryAsync(Guid categoryId);
+
     Task<(IEnumerable<BookResponseDto> Books, int TotalCount)> GetPagedAsync(
-    int pageNumber,
-    int pageSize);
+        int pageNumber,
+        int pageSize);
 
     Task<BookResponseDto> CreateAsync(CreateBookDto request);
 

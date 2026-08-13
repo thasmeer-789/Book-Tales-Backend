@@ -25,6 +25,7 @@ public class OtpVerificationRepository : IOtpVerificationRepository
         string codeHash)
     {
         return await _context.OtpVerifications
+            .AsNoTracking()
             .FirstOrDefaultAsync(o =>
                 o.UserId == userId &&
                 o.Purpose == purpose &&
@@ -38,6 +39,7 @@ public class OtpVerificationRepository : IOtpVerificationRepository
         string purpose)
     {
         return await _context.OtpVerifications
+            .AsNoTracking()
             .Where(o =>
                 o.UserId == userId &&
                 o.Purpose == purpose)
@@ -49,18 +51,15 @@ public class OtpVerificationRepository : IOtpVerificationRepository
         Guid userId,
         string purpose)
     {
-        var previousOtps =
-            await _context.OtpVerifications
-                .Where(o =>
-                    o.UserId == userId &&
-                    o.Purpose == purpose &&
-                    !o.IsUsed)
-                .ToListAsync();
-
-        foreach (var otp in previousOtps)
-        {
-            otp.IsUsed = true;
-        }
+        await _context.OtpVerifications
+            .Where(o =>
+                o.UserId == userId &&
+                o.Purpose == purpose &&
+                !o.IsUsed)
+            .ExecuteUpdateAsync(setters =>
+                setters.SetProperty(
+                    o => o.IsUsed,
+                    true));
     }
 
     public void Update(OtpVerification otp)

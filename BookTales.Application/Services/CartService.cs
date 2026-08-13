@@ -69,22 +69,27 @@ public class CartService : ICartService
             await _cartRepository.SaveChangesAsync();
         }
 
-        var existingItem = await _cartRepository.GetItemAsync(
-            cart.Id,
-            request.BookId);
+        var existingItem = cart.CartItems
+            .FirstOrDefault(item => item.BookId == request.BookId);
 
         if (existingItem != null)
         {
-            existingItem.Quantity += request.Quantity;
+            var newQuantity = existingItem.Quantity + request.Quantity;
 
-            _cartRepository.UpdateItem(existingItem);
+            if (newQuantity > book.Stock)
+                return false;
+
+            existingItem.Quantity = newQuantity;
         }
         else
         {
+            if (request.Quantity > book.Stock)
+                return false;
+
             var item = new CartItem
             {
                 CartId = cart.Id,
-                BookId = request.BookId,
+                BookId = book.Id,
                 Quantity = request.Quantity
             };
 
@@ -109,16 +114,21 @@ public class CartService : ICartService
         if (cart == null)
             return false;
 
-        var item = await _cartRepository.GetItemAsync(
-            cart.Id,
-            bookId);
+        var item = cart.CartItems
+            .FirstOrDefault(item => item.BookId == bookId);
 
         if (item == null)
             return false;
 
-        item.Quantity = request.Quantity;
+        var book = await _bookRepository.GetByIdAsync(bookId);
 
-        _cartRepository.UpdateItem(item);
+        if (book == null)
+            return false;
+
+        if (request.Quantity > book.Stock)
+            return false;
+
+        item.Quantity = request.Quantity;
 
         await _cartRepository.SaveChangesAsync();
 
@@ -134,9 +144,8 @@ public class CartService : ICartService
         if (cart == null)
             return false;
 
-        var item = await _cartRepository.GetItemAsync(
-            cart.Id,
-            bookId);
+        var item = cart.CartItems
+            .FirstOrDefault(item => item.BookId == bookId);
 
         if (item == null)
             return false;

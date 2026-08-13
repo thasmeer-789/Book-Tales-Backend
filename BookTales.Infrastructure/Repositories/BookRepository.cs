@@ -14,23 +14,47 @@ public class BookRepository : IBookRepository
         _context = context;
     }
 
+    // Get all books - Read-only query
     public async Task<IEnumerable<Book>> GetAllAsync()
     {
         return await _context.Books
+            .AsNoTracking()
             .Include(b => b.Category)
             .ToListAsync();
     }
 
+    // Get multiple books in a single database query
+    // Used to avoid N+1 queries during order creation
+    public async Task<List<Book>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        return await _context.Books
+            .AsNoTracking()
+            .Where(b => ids.Contains(b.Id))
+            .ToListAsync();
+    }
+
+    // Get a single book by ID - Read-only query
     public async Task<Book?> GetByIdAsync(Guid id)
+    {
+        return await _context.Books
+            .AsNoTracking()
+            .Include(b => b.Category)
+            .FirstOrDefaultAsync(b => b.Id == id);
+    }
+
+    // Get a single book for update - tracked entity
+    public async Task<Book?> GetByIdForUpdateAsync(Guid id)
     {
         return await _context.Books
             .Include(b => b.Category)
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 
+    // Search books - Read-only query
     public async Task<IEnumerable<Book>> SearchAsync(string search)
     {
         return await _context.Books
+            .AsNoTracking()
             .Include(b => b.Category)
             .Where(b =>
                 b.Title.Contains(search) ||
@@ -39,21 +63,24 @@ public class BookRepository : IBookRepository
             .ToListAsync();
     }
 
+    // Get books by category - Read-only query
     public async Task<IEnumerable<Book>> GetByCategoryAsync(Guid categoryId)
     {
         return await _context.Books
+            .AsNoTracking()
             .Include(b => b.Category)
             .Where(b => b.CategoryId == categoryId)
             .ToListAsync();
     }
 
+    // Get paginated books - Read-only query
     public async Task<(IEnumerable<Book> Books, int TotalCount)> GetPagedAsync(
-    int pageNumber,
-    int pageSize)
+        int pageNumber,
+        int pageSize)
     {
         var query = _context.Books
-            .Include(b => b.Category)
-            .AsQueryable();
+            .AsNoTracking()
+            .Include(b => b.Category);
 
         var totalCount = await query.CountAsync();
 
@@ -64,21 +91,26 @@ public class BookRepository : IBookRepository
 
         return (books, totalCount);
     }
+
+    // Add a new book
     public async Task AddAsync(Book book)
     {
         await _context.Books.AddAsync(book);
     }
 
+    // Update an existing book
     public void Update(Book book)
     {
         _context.Books.Update(book);
     }
 
+    // Delete a book
     public void Delete(Book book)
     {
         _context.Books.Remove(book);
     }
 
+    // Save changes to database
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();

@@ -25,7 +25,6 @@ public class OrderService : IOrderService
 
     public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto)
     {
-
         if (dto.OrderItems == null || !dto.OrderItems.Any())
         {
             throw new InvalidOperationException(
@@ -38,23 +37,40 @@ public class OrderService : IOrderService
                 "Order item quantity must be greater than zero.");
         }
 
+        // Get all required book IDs
+        var bookIds = dto.OrderItems
+            .Select(item => item.BookId)
+            .Distinct()
+            .ToList();
+
+        // Fetch all books with ONE database query
+        var books = await _bookRepository.GetByIdsAsync(bookIds);
+
+        // Create a dictionary for fast lookup
+        var booksById = books.ToDictionary(book => book.Id);
+
         var order = new Order
         {
             UserId = dto.UserId,
             OrderDate = DateTime.UtcNow
-
         };
 
         decimal totalAmount = 0;
 
         foreach (var itemDto in dto.OrderItems)
         {
-            var book = await _bookRepository.GetByIdAsync(itemDto.BookId);
-
-            if (book == null)
+            // Find book from already-loaded books
+            if (!booksById.TryGetValue(itemDto.BookId, out var book))
             {
                 throw new KeyNotFoundException(
                     $"Book with ID {itemDto.BookId} was not found.");
+            }
+
+            // Check stock
+            if (book.Stock < itemDto.Quantity)
+            {
+                throw new InvalidOperationException(
+                    $"Insufficient stock for book '{book.Title}'.");
             }
 
             var orderItem = new OrderItem
@@ -99,8 +115,8 @@ public class OrderService : IOrderService
     }
 
     public async Task<OrderDto?> UpdateOrderStatusAsync(
-    Guid orderId,
-    UpdateOrderStatusDto dto)
+        Guid orderId,
+        UpdateOrderStatusDto dto)
     {
         var order = await _orderRepository.GetByIdAsync(orderId);
 
@@ -141,8 +157,8 @@ public class OrderService : IOrderService
     }
 
     public async Task<OrderDto?> UpdatePaymentStatusAsync(
-    Guid orderId,
-    UpdatePaymentStatusDto dto)
+        Guid orderId,
+        UpdatePaymentStatusDto dto)
     {
         var order = await _orderRepository.GetByIdAsync(orderId);
 
