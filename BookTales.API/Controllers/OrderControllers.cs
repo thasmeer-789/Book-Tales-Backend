@@ -193,6 +193,57 @@ namespace BookTales.API.Controllers
 
             return userId;
         }
+
+        [Authorize(
+    AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
+    Roles = "Admin")]
+        [HttpGet("admin")]
+        public async Task<IActionResult> GetAllOrders()
+        {
+            var orders = await _orderService.GetAllOrdersAsync();
+
+            return Ok(new
+            {
+                success = true,
+                data = orders
+            });
+        }
+
+        [Authorize(
+    AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
+    Roles = "Admin")]
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelOrder(Guid id)
+        {
+            try
+            {
+                var order = await _orderService.CancelOrderAsync(id);
+
+                if (order == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Order not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Order cancelled successfully.",
+                    data = order
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
     }
 
 }

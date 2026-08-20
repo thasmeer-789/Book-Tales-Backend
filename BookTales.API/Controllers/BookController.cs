@@ -1,5 +1,6 @@
 ﻿using BookTales.Application.DTOs.Book;
 using BookTales.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookTales.API.Controllers;
@@ -73,6 +74,7 @@ public class BookController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(CreateBookDto request)
     {
         try
@@ -93,6 +95,7 @@ public class BookController : ControllerBase
 
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(
     Guid id,
     UpdateBookDto request)
@@ -121,6 +124,7 @@ public class BookController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _bookService.DeleteAsync(id);

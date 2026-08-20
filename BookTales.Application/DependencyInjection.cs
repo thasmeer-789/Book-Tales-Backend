@@ -15,6 +15,7 @@ namespace BookTales.Application
             services.AddScoped<IWishlistService, WishlistService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IUserService, UserService>();
 
             return services;
         }

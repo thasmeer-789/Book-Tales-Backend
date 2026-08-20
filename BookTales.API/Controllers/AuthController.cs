@@ -145,6 +145,17 @@ public class AuthController : ControllerBase
             success = true,
             message = "Password reset successfully."
         });
+
+    }
+
+    [HttpPost("admin-login")]
+    public async Task<IActionResult> AdminLogin(
+    LoginRequestDto request)
+    {
+        var response =
+            await _authService.AdminLoginAsync(request);
+
+        return Ok(response);
     }
 
 }

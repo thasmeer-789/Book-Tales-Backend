@@ -12,6 +12,8 @@ namespace BookTales.Domain.Entities
 
         public string PhoneNumber { get; set; } = string.Empty;
 
+        public bool IsBlocked { get; set; } = false;
+
         public Cart? Cart { get; set; }
 
         public Wishlist? Wishlist { get; set; }

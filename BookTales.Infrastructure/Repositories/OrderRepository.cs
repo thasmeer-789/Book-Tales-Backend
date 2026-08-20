@@ -47,5 +47,16 @@ namespace BookTales.Infrastructure.Repositories
             _context.Orders.Update(order);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<Order>> GetAllAsync()
+        {
+            return await _context.Orders
+                .AsNoTracking()
+                .Include(o => o.User)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Book)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
     }
 }

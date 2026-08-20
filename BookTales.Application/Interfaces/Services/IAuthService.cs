@@ -24,4 +24,7 @@ public interface IAuthService
 
     Task<bool> ResetPasswordAsync(
         ResetPasswordRequestDto request);
+
+    Task<AuthResponseDto> AdminLoginAsync(
+    LoginRequestDto request);
 }

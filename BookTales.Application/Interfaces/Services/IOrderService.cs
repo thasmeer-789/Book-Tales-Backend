@@ -10,6 +10,10 @@ namespace BookTales.Application.Interfaces.Services
 
         Task<OrderDto?> GetOrderByIdAsync(Guid orderId, Guid userId);
 
+        Task<IEnumerable<OrderDto>> GetAllOrdersAsync();
+
+        Task<OrderDto?> CancelOrderAsync(Guid orderId);
+
         Task<OrderDto?> UpdateOrderStatusAsync(
             Guid orderId,
             UpdateOrderStatusDto dto);

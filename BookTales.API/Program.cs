@@ -1,6 +1,7 @@
 using BookTales.Application;
 using BookTales.Infrastructure;
 using BookTales.Infrastructure.Identity;
+using BookTales.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -15,7 +16,12 @@ builder.Services.AddControllers();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -75,8 +81,23 @@ if (app.Environment.IsDevelopment())
 
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+    var services = scope.ServiceProvider;
+
+    var roleManager =
+        services.GetRequiredService<RoleManager<ApplicationRole>>();
+
+    var userManager =
+        services.GetRequiredService<UserManager<ApplicationUser>>();
+
+    var context =
+        services.GetRequiredService<ApplicationDbContext>();
+
     await RoleSeeder.SeedRolesAsync(roleManager);
+
+    await AdminSeeder.SeedAdminAsync(
+        userManager,
+        roleManager,
+        context);
 }
 
 app.UseHttpsRedirection();

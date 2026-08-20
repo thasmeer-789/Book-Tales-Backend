@@ -171,6 +171,21 @@ public class AuthService : IAuthService
                 "Invalid email or password.");
         }
 
+        var domainUser =
+    await _userRepository.GetByIdAsync(user.DomainUserId);
+
+    if (domainUser == null)
+        {
+    throw new Exception(
+        "Invalid email or password.");
+    }
+
+        if (domainUser.IsBlocked)
+    {
+    throw new UnauthorizedAccessException(
+        "Your account has been blocked.");
+    }
+
         var isPasswordValid =
             await _userManager.CheckPasswordAsync(
                 user,
@@ -406,5 +421,68 @@ public class AuthService : IAuthService
         return RandomNumberGenerator
             .GetInt32(100000, 1000000)
             .ToString();
+    }
+
+    public async Task<AuthResponseDto> AdminLoginAsync(
+    LoginRequestDto request)
+    {
+        var user =
+            await _userManager.FindByEmailAsync(request.Email);
+
+        if (user == null)
+        {
+            throw new Exception(
+                "Invalid admin email or password.");
+        }
+
+        var domainUser =
+    await _userRepository.GetByIdAsync(user.DomainUserId);
+
+        if (domainUser == null)
+        {
+            throw new Exception(
+                "Invalid admin email or password.");
+        }
+
+        if (domainUser.IsBlocked)
+        {
+            throw new UnauthorizedAccessException(
+                "Your account has been blocked.");
+        }
+
+        var isPasswordValid =
+            await _userManager.CheckPasswordAsync(
+                user,
+                request.Password);
+
+        if (!isPasswordValid)
+        {
+            throw new Exception(
+                "Invalid admin email or password.");
+        }
+
+        var roles =
+            await _userManager.GetRolesAsync(user);
+
+        if (!roles.Contains("Admin"))
+        {
+            throw new UnauthorizedAccessException(
+                "Admin access is required.");
+        }
+
+        var token =
+            _jwtService.GenerateToken(
+                user.DomainUserId,
+                user.Email!,
+                roles);
+
+        return new AuthResponseDto
+        {
+            Success = true,
+            Message = "Admin login successful.",
+            Token = token,
+            Email = user.Email!,
+            Roles = roles
+        };
     }
 }

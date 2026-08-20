@@ -10,6 +10,9 @@ namespace BookTales.Application.Interfaces.Repositories
 
         Task<Order?> GetByIdAsync(Guid orderId);
 
+        Task<IEnumerable<Order>> GetAllAsync();
+        
         Task UpdateAsync(Order order);
+
     }
 }

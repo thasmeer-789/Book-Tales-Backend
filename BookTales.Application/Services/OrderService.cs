@@ -193,4 +193,32 @@ public class OrderService : IOrderService
 
         return _mapper.Map<OrderDto>(order);
     }
+
+    public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
+    {
+        var orders = await _orderRepository.GetAllAsync();
+
+        return _mapper.Map<IEnumerable<OrderDto>>(orders);
+    }
+
+    public async Task<OrderDto?> CancelOrderAsync(Guid orderId)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+
+        if (order == null)
+            return null;
+
+        if (order.Status != OrderStatus.Pending &&
+            order.Status != OrderStatus.Confirmed)
+        {
+            throw new InvalidOperationException(
+                $"Cannot cancel an order with status {order.Status}.");
+        }
+
+        order.Status = OrderStatus.Cancelled;
+
+        await _orderRepository.UpdateAsync(order);
+
+        return _mapper.Map<OrderDto>(order);
+    }
 }

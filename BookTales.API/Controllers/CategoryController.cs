@@ -1,5 +1,6 @@
 ﻿using BookTales.Application.DTOs.Category;
 using BookTales.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookTales.API.Controllers;
@@ -35,6 +36,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(CreateCategoryDto request)
     {
         try
@@ -54,6 +56,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(
     Guid id,
     UpdateCategoryDto request)
@@ -82,6 +85,7 @@ public class CategoryController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _categoryService.DeleteAsync(id);
