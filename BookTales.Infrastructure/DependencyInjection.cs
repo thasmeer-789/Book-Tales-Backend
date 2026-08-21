@@ -29,7 +29,10 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         services.Configure<EmailSettings>(
-    configuration.GetSection("EmailSettings"));
+             configuration.GetSection("EmailSettings"));
+
+        services.Configure<CloudinarySettings>(
+             configuration.GetSection("CloudinarySettings"));
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IEmailService, EmailService>();
@@ -42,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
 
         return services;
     }
