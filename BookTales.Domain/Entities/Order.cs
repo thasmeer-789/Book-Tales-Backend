@@ -17,6 +17,11 @@ namespace BookTales.Domain.Entities
 
         public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
 
-        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public string? RazorpayOrderId { get; set; }
+
+        public string? RazorpayPaymentId { get; set; }
+
+        public ICollection<OrderItem> OrderItems { get; set; }
+            = new List<OrderItem>();
     }
 }

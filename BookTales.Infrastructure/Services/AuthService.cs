@@ -210,7 +210,10 @@ public class AuthService : IAuthService
             Success = true,
             Message = "Login successful.",
             Token = token,
+            UserId = user.DomainUserId,
             Email = user.Email!,
+            FirstName = domainUser.FirstName,
+            LastName = domainUser.LastName,
             Roles = roles
         };
     }
@@ -481,7 +484,10 @@ public class AuthService : IAuthService
             Success = true,
             Message = "Admin login successful.",
             Token = token,
+            UserId = user.DomainUserId,
             Email = user.Email!,
+            FirstName = domainUser.FirstName,
+            LastName = domainUser.LastName,
             Roles = roles
         };
     }

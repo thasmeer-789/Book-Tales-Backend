@@ -76,6 +76,7 @@ public class OrderService : IOrderService
             var orderItem = new OrderItem
             {
                 BookId = book.Id,
+                BookTitle = book.Title,
                 Quantity = itemDto.Quantity,
                 Price = book.Price
             };

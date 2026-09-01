@@ -152,6 +152,20 @@ public class BookService : IBookService
         return true;
     }
 
+    //public async Task<bool> DeleteAsync(Guid id)
+    //{
+    //    var book = await _bookRepository.GetByIdAsync(id);
+
+    //    if (book == null)
+    //        return false;
+
+    //    _bookRepository.Delete(book);
+
+    //    await _bookRepository.SaveChangesAsync();
+
+    //    return true;
+    //}
+
     public async Task<bool> DeleteAsync(Guid id)
     {
         var book = await _bookRepository.GetByIdAsync(id);
@@ -159,10 +173,20 @@ public class BookService : IBookService
         if (book == null)
             return false;
 
-        _bookRepository.Delete(book);
+        try
+        {
+            _bookRepository.Delete(book);
 
-        await _bookRepository.SaveChangesAsync();
+            await _bookRepository.SaveChangesAsync();
 
-        return true;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("DELETE BOOK ERROR:");
+            Console.WriteLine(ex.ToString());
+
+            throw;
+        }
     }
 }

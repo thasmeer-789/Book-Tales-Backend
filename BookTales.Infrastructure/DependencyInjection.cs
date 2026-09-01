@@ -1,5 +1,6 @@
 ﻿using BookTales.Application.Interfaces.Repositories;
 using BookTales.Application.Interfaces.Services;
+using BookTales.Application.Services;
 using BookTales.Infrastructure.Identity;
 using BookTales.Infrastructure.Persistence;
 using BookTales.Infrastructure.Repositories;
@@ -34,6 +35,9 @@ public static class DependencyInjection
         services.Configure<CloudinarySettings>(
              configuration.GetSection("CloudinarySettings"));
 
+        services.Configure<RazorpaySettings>(
+            configuration.GetSection("Razorpay"));      
+
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IOtpVerificationRepository, OtpVerificationRepository>();
@@ -46,6 +50,9 @@ public static class DependencyInjection
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<ICloudinaryService, CloudinaryService>();
+        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IAddressRepository, AddressRepository>();
+        services.AddScoped<IAddressService, AddressService>();
 
         return services;
     }

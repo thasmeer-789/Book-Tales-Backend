@@ -1,4 +1,5 @@
 ﻿using BookTales.Application.DTOs.Admin;
+using BookTales.Application.DTOs.User;
 using BookTales.Application.Interfaces.Repositories;
 using BookTales.Application.Interfaces.Services;
 
@@ -84,5 +85,47 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<UserProfileDto?> GetMyProfileAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+
+        if (user == null)
+            return null;
+
+        return new UserProfileDto
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber
+        };
+    }
+
+    public async Task<UserProfileDto?> UpdateMyProfileAsync(
+        Guid userId,
+        UpdateUserProfileDto dto)
+    {
+        var user = await _userRepository.GetByIdForUpdateAsync(userId);
+
+        if (user == null)
+            return null;
+
+        user.FirstName = dto.FirstName.Trim();
+        user.LastName = dto.LastName.Trim();
+        user.PhoneNumber = dto.PhoneNumber.Trim();
+
+        await _userRepository.SaveChangesAsync();
+
+        return new UserProfileDto
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber
+        };
     }
 }

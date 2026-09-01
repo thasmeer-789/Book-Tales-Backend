@@ -33,13 +33,44 @@ namespace BookTales.Infrastructure.Persistence
 
         public DbSet<OrderItem> OrderItems { get; set; }
 
+        public DbSet<Address> Addresses { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Fluent API Configurations will go here
-            builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+            builder.Entity<Address>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.Addresses)
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
+
+
+            // Book → CartItem
+            builder.Entity<CartItem>()
+                .HasOne(ci => ci.Book)
+                .WithMany(b => b.CartItems)
+                .HasForeignKey(ci => ci.BookId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Book → WishlistItem
+            builder.Entity<WishlistItem>()
+                .HasOne(wi => wi.Book)
+                .WithMany(b => b.WishlistItems)
+                .HasForeignKey(wi => wi.BookId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Book → OrderItem
+            // Keep OrderItem when Book is deleted.
+            builder.Entity<OrderItem>()
+                .HasOne(oi => oi.Book)
+                .WithMany(b => b.OrderItems)
+                .HasForeignKey(oi => oi.BookId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.ApplyConfigurationsFromAssembly(
+                typeof(ApplicationDbContext).Assembly);
         }
     }
 }
