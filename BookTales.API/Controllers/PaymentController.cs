@@ -18,10 +18,6 @@ public class PaymentController : ControllerBase
         _paymentService = paymentService;
     }
 
-    // =====================================================
-    // CREATE RAZORPAY ORDER
-    // =====================================================
-
     [HttpPost("create-order")]
     public async Task<IActionResult> CreatePaymentOrder(
         [FromBody] CreatePaymentOrderDto dto)
@@ -55,10 +51,6 @@ public class PaymentController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-
-    // =====================================================
-    // VERIFY RAZORPAY PAYMENT
-    // =====================================================
 
     [HttpPost("verify")]
     public async Task<IActionResult> VerifyPayment(
@@ -107,11 +99,39 @@ public class PaymentController : ControllerBase
         }
     }
 
-    // =====================================================
-    // GET LOGGED-IN USER ID
-    // =====================================================
+    [HttpPost("fail")]
+    public async Task<IActionResult> MarkPaymentFailed(
+        [FromBody] CreatePaymentOrderDto dto)
+    {
+        var userId = GetUserId();
 
-    private Guid? GetUserId() 
+        if (userId == null)
+        {
+            return Unauthorized("Invalid user token.");
+        }
+
+        try
+        {
+            await _paymentService.MarkPaymentFailedAsync(
+                dto.OrderId,
+                userId.Value);
+
+            return Ok(new
+            {
+                message = "Order marked as payment failed."
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+    }
+
+    private Guid? GetUserId()
     {
         var userIdClaim =
             User.FindFirstValue(ClaimTypes.NameIdentifier);

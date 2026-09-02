@@ -69,8 +69,6 @@ public class PaymentService : IPaymentService
 
         var razorpayOrder = client.Order.Create(options);
 
-        // IMPORTANT:
-        // Explicitly declare this as string? because Razorpay returns dynamic.
         string? razorpayOrderId =
             razorpayOrder["id"]?.ToString();
 
@@ -80,7 +78,6 @@ public class PaymentService : IPaymentService
                 "Razorpay order ID was not returned.");
         }
 
-        // At this point C# knows razorpayOrderId is not null.
         order.RazorpayOrderId = razorpayOrderId;
 
         await _orderRepository.UpdateAsync(order);
@@ -163,5 +160,33 @@ public class PaymentService : IPaymentService
         await _orderRepository.UpdateAsync(order);
 
         return true;
+    }
+
+    public async Task MarkPaymentFailedAsync(
+        Guid orderId,
+        Guid userId)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+
+        if (order == null)
+        {
+            throw new KeyNotFoundException("Order not found.");
+        }
+
+        if (order.UserId != userId)
+        {
+            throw new UnauthorizedAccessException(
+                "You are not allowed to update this order.");
+        }
+
+        if (order.PaymentStatus != PaymentStatus.Pending)
+        {
+            return;
+        }
+
+        order.PaymentStatus = PaymentStatus.Failed;
+        order.Status = OrderStatus.Cancelled;
+
+        await _orderRepository.UpdateAsync(order);
     }
 }

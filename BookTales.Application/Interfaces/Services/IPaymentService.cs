@@ -1,5 +1,4 @@
 ﻿using BookTales.Application.DTOs.Payment;
-
 namespace BookTales.Application.Interfaces.Services
 {
     public interface IPaymentService
@@ -7,9 +6,11 @@ namespace BookTales.Application.Interfaces.Services
         Task<CreatePaymentOrderResponseDto> CreatePaymentOrderAsync(
             CreatePaymentOrderDto dto,
             Guid userId);
-
         Task<bool> VerifyPaymentAsync(
             VerifyPaymentDto dto,
+            Guid userId);
+        Task MarkPaymentFailedAsync(
+            Guid orderId,
             Guid userId);
     }
 }

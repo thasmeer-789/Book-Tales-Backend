@@ -37,16 +37,13 @@ public class OrderService : IOrderService
                 "Order item quantity must be greater than zero.");
         }
 
-        // Get all required book IDs
         var bookIds = dto.OrderItems
             .Select(item => item.BookId)
             .Distinct()
             .ToList();
 
-        // Fetch all books with ONE database query
         var books = await _bookRepository.GetByIdsAsync(bookIds);
 
-        // Create a dictionary for fast lookup
         var booksById = books.ToDictionary(book => book.Id);
 
         var order = new Order
@@ -59,14 +56,12 @@ public class OrderService : IOrderService
 
         foreach (var itemDto in dto.OrderItems)
         {
-            // Find book from already-loaded books
             if (!booksById.TryGetValue(itemDto.BookId, out var book))
             {
                 throw new KeyNotFoundException(
                     $"Book with ID {itemDto.BookId} was not found.");
             }
 
-            // Check stock
             if (book.Stock < itemDto.Quantity)
             {
                 throw new InvalidOperationException(
@@ -123,6 +118,17 @@ public class OrderService : IOrderService
 
         if (order == null)
             return null;
+
+        // An order whose payment hasn't succeeded can only be
+        // Cancelled — it can never be Confirmed/Shipped/Delivered,
+        // regardless of what OrderStatus transitions would otherwise
+        // be allowed below.
+        if (dto.Status != OrderStatus.Cancelled &&
+            order.PaymentStatus != PaymentStatus.Paid)
+        {
+            throw new InvalidOperationException(
+                "Cannot progress an order that has not been paid for.");
+        }
 
         var isValidTransition = order.Status switch
         {
