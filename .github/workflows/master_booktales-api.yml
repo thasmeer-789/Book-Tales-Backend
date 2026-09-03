@@ -28,6 +28,13 @@ jobs:
 
       - name: dotnet publish
         run: dotnet publish BookTales.API/BookTales.API.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        
+      - name: Check JWT DLL
+        shell: pwsh
+        run: |
+          $dll = "${{env.DOTNET_ROOT}}/myapp/System.IdentityModel.Tokens.Jwt.dll"
+          Get-Item $dll
+          [System.Diagnostics.FileVersionInfo]::GetVersionInfo($dll) | Select-Object FileVersion, ProductVersion
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
