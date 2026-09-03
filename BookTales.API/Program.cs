@@ -159,6 +159,8 @@ app.UseAuthorization();
 // CONTROLLERS
 // =====================================================
 
+app.MapGet("/", () => "BookTales API is running.");
+
 app.MapControllers();
 
 app.Run();
