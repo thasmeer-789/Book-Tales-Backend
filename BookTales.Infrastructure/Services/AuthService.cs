@@ -6,6 +6,7 @@ using BookTales.Domain.Entities;
 using BookTales.Infrastructure.Identity;
 using BookTales.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -54,109 +55,103 @@ public class AuthService : IAuthService
         if (existingDomainUser != null)
             throw new Exception("Email already exists.");
 
-        await using var transaction =
-            await _context.Database.BeginTransactionAsync();
+        var strategy = _context.Database.CreateExecutionStrategy();
 
-        try
+        return await strategy.ExecuteAsync(async () =>
         {
-            // 1. Create Domain User
-            var domainUser = new User
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                PhoneNumber = request.PhoneNumber
-            };
+                // 1. Create Domain User
+                var domainUser = new User
+                {
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Email = request.Email,
+                    PhoneNumber = request.PhoneNumber
+                };
 
-            await _userRepository.AddAsync(domainUser);
-            await _userRepository.SaveChangesAsync();
+                await _userRepository.AddAsync(domainUser);
+                await _userRepository.SaveChangesAsync();
 
-            // 2. Create Identity User
-            var applicationUser = new ApplicationUser
-            {
-                UserName = request.Email,
-                Email = request.Email,
-                PhoneNumber = request.PhoneNumber,
-                DomainUserId = domainUser.Id
-            };
+                // 2. Create Identity User
+                var applicationUser = new ApplicationUser
+                {
+                    UserName = request.Email,
+                    Email = request.Email,
+                    PhoneNumber = request.PhoneNumber,
+                    DomainUserId = domainUser.Id
+                };
 
-            var result = await _userManager.CreateAsync(
-                applicationUser,
-                request.Password);
-
-            if (!result.Succeeded)
-            {
-                throw new Exception(
-                    string.Join(
-                        ", ",
-                        result.Errors.Select(e => e.Description)));
-            }
-
-            // 3. Add User Role
-            var roleResult =
-                await _userManager.AddToRoleAsync(
+                var result = await _userManager.CreateAsync(
                     applicationUser,
-                    "User");
+                    request.Password);
 
-            if (!roleResult.Succeeded)
-            {
-                throw new Exception(
-                    string.Join(
-                        ", ",
-                        roleResult.Errors.Select(e => e.Description)));
+                if (!result.Succeeded)
+                {
+                    throw new Exception(
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
+
+                // 3. Add User Role
+                var roleResult =
+                    await _userManager.AddToRoleAsync(applicationUser, "User");
+
+                if (!roleResult.Succeeded)
+                {
+                    throw new Exception(
+                        string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                }
+
+                // 4. Invalidate previous registration OTPs
+                await _otpRepository.InvalidatePreviousOtpsAsync(
+                    domainUser.Id, OtpPurpose.RegisterVerification);
+
+                // 5. Generate OTP
+                var otp = GenerateOtp();
+                var otpHash = Convert.ToBase64String(
+                    SHA256.HashData(Encoding.UTF8.GetBytes(otp)));
+
+                // 6. Store OTP
+                var otpVerification = new OtpVerification
+                {
+                    UserId = domainUser.Id,
+                    CodeHash = otpHash,
+                    Purpose = OtpPurpose.RegisterVerification,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(5),
+                    IsUsed = false
+                };
+
+                await _otpRepository.AddAsync(otpVerification);
+                await _otpRepository.SaveChangesAsync();
+
+                // 7. Send OTP Email
+                await _emailService.SendEmailAsync(
+                    applicationUser.Email!,
+                    "Book-Tales Registration OTP",
+                    $"Your Book-Tales verification OTP is: {otp}. It expires in 5 minutes.");
+
+                // 8. Commit transaction
+                await transaction.CommitAsync();
+
+                return new AuthResponseDto
+                {
+                    Success = true,
+                    Message = "Registration successful. Please verify your email using the OTP sent to you.",
+                    Email = domainUser.Email,
+                    FirstName = domainUser.FirstName,
+                    LastName = domainUser.LastName,
+                    Roles = new List<string> { "User" }
+                };
             }
-
-            // 4. Invalidate previous registration OTPs
-            await _otpRepository.InvalidatePreviousOtpsAsync(
-                domainUser.Id,
-                OtpPurpose.RegisterVerification);
-
-            // 5. Generate OTP
-            var otp = GenerateOtp();
-
-            var otpHash = Convert.ToBase64String(
-                SHA256.HashData(
-                    Encoding.UTF8.GetBytes(otp)));
-
-            // 6. Store OTP
-            var otpVerification = new OtpVerification
+            catch
             {
-                UserId = domainUser.Id,
-                CodeHash = otpHash,
-                Purpose = OtpPurpose.RegisterVerification,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(5),
-                IsUsed = false
-            };
-
-            await _otpRepository.AddAsync(otpVerification);
-            await _otpRepository.SaveChangesAsync();
-
-            // 7. Send OTP Email
-            await _emailService.SendEmailAsync(
-                applicationUser.Email!,
-                "Book-Tales Registration OTP",
-                $"Your Book-Tales verification OTP is: {otp}. " +
-                "It expires in 5 minutes.");
-
-            // 8. Commit transaction
-            await transaction.CommitAsync();
-
-            return new AuthResponseDto
-            {
-                Success = true,
-                Message =
-                    "Registration successful. Please verify your email using the OTP sent to you.",
-                Email = domainUser.Email,
-                FirstName = domainUser.FirstName,
-                LastName = domainUser.LastName,
-                Roles = new List<string> { "User" }
-            };
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+                await transaction.RollbackAsync();
+                throw;
+            }
+        });
     }
 
     public async Task<AuthResponseDto> LoginAsync(
